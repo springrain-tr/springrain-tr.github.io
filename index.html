@@ -1,1 +1,260 @@
-<p>hello world</p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0b0f0e" />
+  <meta name="description" content="九州 · 城市织造局 — 一座可实时生成的中国程序化 3D 城市实验室。重庆、上海、西安、深圳、江南，五种中国城市原型。" />
+  <title>九州 · 城市织造局 | 中国程序化城市生成器</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23c8492f'/%3E%3Cpath d='M16 20h32M16 31h32M16 42h32M24 14v36M40 14v36' stroke='%23f5eedf' stroke-width='2'/%3E%3C/svg%3E" />
+  <script type="module" crossorigin src="/assets/index-D3LjENmR.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CixD-R7D.css">
+</head>
+<body>
+  <div id="app">
+    <div class="stage" id="stage">
+      <canvas id="world" aria-label="程序化生成的中国城市三维场景"></canvas>
+      <div class="stage-grain" aria-hidden="true"></div>
+      <div class="stage-vignette" aria-hidden="true"></div>
+      <div class="stage-letterbox" aria-hidden="true"></div>
+      <div class="scene-caption" id="sceneCaption" aria-live="polite">
+        <div class="caption-rule"><span></span><i></i></div>
+        <div class="caption-main">
+          <span class="caption-index" id="captionIndex">01</span>
+          <div>
+            <div class="caption-city"><span id="captionCn">重庆</span><em id="captionEn">CHONGQING</em></div>
+            <p id="captionPoem">两江交汇，楼在山中，路在云上。</p>
+          </div>
+        </div>
+        <div class="caption-meta">
+          <span id="captionCoord">29.5630° N / 106.5510° E</span>
+          <span id="captionWeather">江雾 · 东南风 2 级</span>
+        </div>
+      </div>
+      <div class="compass" aria-hidden="true">
+        <span class="compass-n">N</span>
+        <svg viewBox="0 0 72 72" width="72" height="72">
+          <circle cx="36" cy="36" r="28" fill="none" stroke="currentColor" stroke-opacity=".2"/>
+          <circle cx="36" cy="36" r="18" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-dasharray="1 5"/>
+          <path d="M36 8l4 23-4 5-4-5 4-23z" fill="currentColor" fill-opacity=".75"/>
+          <path d="M36 64l-2.5-15 2.5-4 2.5 4-2.5 15z" fill="currentColor" fill-opacity=".25"/>
+          <circle cx="36" cy="36" r="2" fill="currentColor" fill-opacity=".7"/>
+        </svg>
+        <span class="compass-label">TRUE NORTH</span>
+      </div>
+      <div class="render-status" id="renderStatus">
+        <i></i><span>LIVE PROCEDURAL RENDER</span>
+      </div>
+      <div class="world-labels" id="worldLabels" aria-hidden="true"></div>
+    </div>
+
+    <header class="topbar">
+      <a class="brand" href="." aria-label="九州城市织造局首页">
+        <span class="seal">九<br>州</span>
+        <span class="brand-copy">
+          <strong>城市织造局</strong>
+          <small>CITY WEAVER · PROCEDURAL CHINA</small>
+        </span>
+      </a>
+      <div class="topbar-center">
+        <span class="center-kicker">中国城市形态研究计划</span>
+        <span class="center-meta">CHINA URBAN MORPHOLOGY ATLAS <b>／</b> VOL. 05</span>
+      </div>
+      <nav class="top-actions" aria-label="页面操作">
+        <button class="icon-btn" id="btnSound" title="环境音（实验）" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 9v6h3l4 4V5L7 9H4zM16 8.5a5 5 0 010 7M18.5 6a8 8 0 010 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <span>环境音</span>
+        </button>
+        <button class="icon-btn" id="btnRandomTop" title="以新种子重新生成 (R)">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 7h3l11 10h4m0 0v-4m0 4h-4M3 17h3l3-3m8-4 3-3h1m0 0V4m0 3h-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>随机生成</span><kbd>R</kbd>
+        </button>
+        <button class="icon-btn" id="btnExport" title="导出一张当前视角的高清图像">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>导出影像</span>
+        </button>
+        <button class="icon-btn immersive" id="btnImmersive" title="隐藏界面，沉浸观看 (H)">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          <span>沉浸</span><kbd>H</kbd>
+        </button>
+      </nav>
+    </header>
+
+    <div class="mobile-city-strip" id="mobileCityStrip" role="tablist" aria-label="城市风格"></div>
+
+    <aside class="left-rail" aria-label="城市卷宗">
+      <div class="rail-heading">
+        <div>
+          <span class="section-no">Ⅰ</span>
+          <h2>城市卷宗</h2>
+        </div>
+        <span class="rail-sub">05 PRESETS</span>
+      </div>
+      <div class="city-list" id="cityList" role="tablist" aria-label="选择城市风格"></div>
+
+      <div class="atlas-card">
+        <div class="atlas-head">
+          <span><i></i> 城市总图</span>
+          <em>PLAN · <b id="atlasHeading">CHONGQING</b></em>
+        </div>
+        <div class="atlas-canvas-wrap">
+          <canvas id="minimap" width="460" height="272" aria-label="当前城市俯视地图"></canvas>
+          <span class="atlas-n">N</span>
+          <span class="atlas-scale"><i></i> 1 KM</span>
+        </div>
+        <div class="atlas-foot">
+          <span id="seedReadout">SEED / CQ-2901</span>
+          <button id="btnNewSeed">换一枚种子 <span>↗</span></button>
+        </div>
+      </div>
+
+      <div class="left-note">
+        <span>山水入城，城随山势。</span>
+        <em>EVERY CITY IS A SEED OF ITS LAND.</em>
+      </div>
+    </aside>
+
+    <aside class="right-rail" id="rightRail" aria-label="生成参数">
+      <div class="panel-scroll">
+      <div class="panel-heading">
+        <div>
+          <span class="section-no">Ⅱ</span>
+          <h2>形制参数</h2>
+        </div>
+        <button class="panel-close" id="btnClosePanel" title="收起参数面板">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+        </button>
+      </div>
+
+      <div class="style-brief">
+        <div class="brief-eyebrow"><span id="briefIndex">NO. 01</span><i></i><span id="briefKicker">立体山城</span></div>
+        <h3 id="briefTitle">山城叠影</h3>
+        <p id="briefDesc">依山就势的垂直城市。两江、坡坎、层叠立交与穿楼轻轨，共同塑造中国最立体的城市剖面。</p>
+        <div class="brief-data">
+          <div><span>坐标</span><b id="briefCoord">29.56°N / 106.55°E</b></div>
+          <div><span>海拔</span><b id="briefAltitude">168 — 412 m</b></div>
+        </div>
+      </div>
+
+      <div class="control-section">
+        <div class="control-label-row">
+          <label for="ctlDensity">建筑密度 <em>/ DENSITY</em></label>
+          <output id="valDensity">72</output>
+        </div>
+        <input class="range" id="ctlDensity" type="range" min="28" max="100" value="72" step="1" />
+        <div class="range-ticks"><span>疏朗</span><span>稠密</span></div>
+      </div>
+
+      <div class="control-section">
+        <div class="control-label-row">
+          <label for="ctlHeight">天际高度 <em>/ SKYLINE</em></label>
+          <output id="valHeight">100</output>
+        </div>
+        <input class="range" id="ctlHeight" type="range" min="55" max="150" value="100" step="1" />
+        <div class="range-ticks"><span>低伏</span><span>凌云</span></div>
+      </div>
+
+      <div class="control-section time-control">
+        <div class="control-label-row">
+          <label for="ctlTime">天光时刻 <em>/ HOUR</em></label>
+          <output id="valTime" class="time-output">18:42</output>
+        </div>
+        <input class="range range-time" id="ctlTime" type="range" min="0" max="1440" value="1122" step="1" />
+        <div class="range-ticks time-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+      </div>
+
+      <div class="control-section">
+        <div class="control-label-row">
+          <label for="ctlFog">江天雾霭 <em>/ ATMOSPHERE</em></label>
+          <output id="valFog">48</output>
+        </div>
+        <input class="range" id="ctlFog" type="range" min="0" max="100" value="48" step="1" />
+        <div class="range-ticks"><span>澄澈</span><span>氤氲</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="specific-head">
+        <span>在地形制</span>
+        <em id="specificTitle">山城专属</em>
+      </div>
+      <div id="specificControls" class="specific-controls"></div>
+
+      <div class="divider"></div>
+
+      <div class="view-block">
+        <div class="view-label"><span>取景机位</span><em>CAMERA</em></div>
+        <div class="segmented camera-seg" id="cameraSeg" role="group" aria-label="选择相机视角">
+          <button data-view="aerial" class="active"><span>◫</span>鸟瞰</button>
+          <button data-view="street"><span>◒</span>人视</button>
+          <button data-view="orbit"><span>◎</span>环游</button>
+        </div>
+        <button class="toggle-row" id="toggleOrbit" aria-pressed="true">
+          <span class="toggle-copy"><b>自动漫游</b><small>AUTO ORBIT</small></span>
+          <span class="switch"><i></i></span>
+        </button>
+      </div>
+      </div>
+
+      <button class="generate-btn" id="btnGenerate">
+        <span class="generate-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 12a8 8 0 11-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="generate-copy"><b>重塑城市</b><small>RE-SEED THE CITY</small></span>
+        <span class="generate-key">R</span>
+      </button>
+    </aside>
+
+    <div class="bottom-dock">
+      <div class="dock-stats">
+        <span class="live-dot"></span>
+        <div class="stat-pair"><span>建筑</span><b id="statBuildings">1,248</b></div>
+        <div class="stat-pair"><span>面数</span><b id="statTriangles">—</b></div>
+        <div class="stat-pair"><span>帧率</span><b id="statFps">60</b></div>
+        <div class="stat-pair seed-stat"><span>种子</span><b id="statSeed">CQ-2901</b></div>
+      </div>
+      <div class="dock-center">
+        <span class="dock-location"><i></i><span id="dockCn">重庆</span><em id="dockEn">CHONGQING</em></span>
+        <span class="dock-divider"></span>
+        <span class="dock-time" id="dockTime">18:42 CST</span>
+        <span class="dock-weather"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 15h13a3 3 0 000-6 5 5 0 00-9.6-1.4A3.5 3.5 0 004 15z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span id="dockWeather">江雾</span></span>
+      </div>
+      <div class="dock-hint"><span>拖拽旋转</span><i>·</i><span>滚轮缩放</span><i>·</i><span>右键平移</span></div>
+    </div>
+
+    <button class="exit-immersive" id="btnExitImmersive" aria-label="退出沉浸模式">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9 9l6 6M15 9l-6 6" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5"/></svg>
+      <span>退出沉浸</span>
+    </button>
+
+    <button class="mobile-panel-toggle" id="btnOpenPanel">
+      <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      参数
+    </button>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <span class="toast-mark"></span>
+      <span id="toastText">城市已重塑</span>
+    </div>
+
+    <div class="loader" id="loader">
+      <div class="loader-inner">
+        <div class="loader-seal">九州</div>
+        <div class="loader-copy">
+          <span id="loaderKicker">THE CITY IS TAKING SHAPE</span>
+          <h2 id="loaderTitle">正在测绘山城</h2>
+          <div class="loader-line"><i id="loaderProgress"></i></div>
+          <p id="loaderMeta">GENERATING TERRAIN · ROADS · LIGHT</p>
+        </div>
+      </div>
+      <div class="contour contour-a"></div>
+      <div class="contour contour-b"></div>
+      <div class="contour contour-c"></div>
+      <div class="loader-corner">IJZ · 2026 / CN</div>
+    </div>
+
+    <noscript>此页面需要启用 JavaScript 才能生成三维城市。</noscript>
+  </div>
+
+</body>
+</html>
