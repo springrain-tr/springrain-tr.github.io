@@ -14,3 +14,8 @@
 - `.nojekyll` — 跳过 Jekyll 处理，确保 `assets/` 原样发布
 
 更新方式：在源码仓库执行 `npm run build`，将 `dist/` 内容同步到本仓库 `main` 分支根目录后推送。
+
+## 部署记录
+
+- 源码提交：`714b0ac` 移动端适配：竖屏自动取景、抽屉面板、安全区与自适应分辨率
+- 构建产物：`index-B7i0oZJr.js` / `index-CmT3cWRo.css`（2026-11-15）
